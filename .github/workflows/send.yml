@@ -61,6 +61,9 @@ jobs:
               try:
                   c = json.loads(p.read_text(encoding="utf-8"))
                   names = [n for n in c.get("friends", []) if isinstance(n, str)]
+                  for t in c.get("targets", []):
+                      if isinstance(t, dict) and isinstance(t.get("name"), str):
+                          names.append(t["name"])
               except Exception:
                   pass
           p = pathlib.Path("artifacts/result.json")
