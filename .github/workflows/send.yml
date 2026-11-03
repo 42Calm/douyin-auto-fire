@@ -1,12 +1,11 @@
 name: Send Douyin Messages
 
+# 说明：本仓库在 GitHub Actions 上只做「巡检」（dry run，不发送消息）。
+# 抖音会风控 GitHub 机房 IP，真实发送会失败并导致账号登录态失效，
+# 因此真实发送由本机的 Windows 计划任务 DouyinStreakDaily（每天 08:30）执行。
+
 on:
   workflow_dispatch:
-    inputs:
-      dry_run:
-        description: Only verify login and friends without sending
-        type: boolean
-        default: false
   schedule:
     # GitHub Actions 的 cron 使用 UTC 时间，00:30 UTC = 08:30 北京时间
     - cron: "30 0 * * *"
@@ -39,15 +38,11 @@ jobs:
       - name: Write task config
         shell: bash
         run: printf '%s' "$DOUYIN_CONFIG" > config.json
-      - name: Run
+      - name: Run (dry-run only)
         shell: bash
         run: |
-          set +e
-          if [ "${{ github.event_name }}" = "push" ] || [ "${{ inputs.dry_run }}" = "true" ]; then
-            python run.py --dry-run
-          else
-            python run.py
-          fi
+          echo "巡检模式：不发送消息，仅验证登录态与好友是否可打开。"
+          python run.py --dry-run
           echo "exit_code=$?" >> "$GITHUB_ENV"
           exit 0
       - name: Publish run status
