@@ -1,10 +1,10 @@
 {
-  "exit_code": "0",
+  "exit_code": "1",
   "event": "workflow_dispatch",
   "total": 1,
   "sent": 0,
   "statuses": [
-    "success"
+    "failed"
   ],
-  "log_tail": "2026-11-03 11:34:29,448 INFO 检测到好友搜索框: selector=input[placeholder*=\"搜索\"], 第 1 次尝试\n2026-11-03 11:34:32,455 INFO 处理好友: 好友01\n2026-11-03 11:34:34,909 INFO \n============================================================\n运行指标摘要\n============================================================\n总目标数: 1\n  成功: 1\n  失败: 0\n  成功率: 100.0%\n\n总消息数: 0\n  发送成功: 0\n  发送失败: 0\n  跳过（防重复）: 0\n  消息成功率: 0.0%\n\n执行时间: 14.2秒\n\n开始时间: 2026-11-03T11:34:20.682571+00:00\n结束时间: 2026-11-03T11:34:34.908795+00:00\n============================================================\n2026-11-03 11:34:34,909 INFO 执行结束: 成功 1，失败 0\n"
+  "log_tail": "2026-11-03 11:36:24,316 INFO 检测到好友搜索框: selector=input[placeholder*=\"搜索\"], 第 1 次尝试\n2026-11-03 11:36:27,323 INFO 处理好友: 好友01\n2026-11-03 11:36:47,131 ERROR 好友处理失败: 好友01 (错误类型: transient)\nTraceback (most recent call last):\n  File \"/home/runner/work/douyin-auto-fire/douyin-auto-fire/app/main.py\", line 122, in run\n    await send_message(page, chat, message, task.stickers)\n  File \"/home/runner/work/douyin-auto-fire/douyin-auto-fire/app/sender.py\", line 123, in send_message\n    await send_text(chat, message.content or \"\")\n  File \"/home/runner/work/douyin-auto-fire/douyin-auto-fire/app/sender.py\", line 159, in send_text\n    await _confirm_outgoing_message(page, before, label=\"文字\", expected_text=content)\n  File \"/home/runner/work/douyin-auto-fire/douyin-auto-fire/app/sender.py\", line 452, in _confirm_outgoing_message\n    await _await_send_terminal_state(page, latest, label)\n  File \"/home/runner/work/douyin-auto-fire/douyin-auto-fire/app/sender.py\", line 406, in _await_send_terminal_state\n    raise PageOperationError(f\"{label}发送失败，页面提示可以重试\")\napp.douyin.PageOperationError: 文字发送失败，页面提示可以重试\n2026-11-03 11:36:48,447 INFO \n============================================================\n运行指标摘要\n============================================================\n总目标数: 1\n  成功: 0\n  失败: 1\n  成功率: 0.0%\n\n总消息数: 0\n  发送成功: 0\n  发送失败: 0\n  跳过（防重复）: 0\n  消息成功率: 0.0%\n\n执行时间: 38.0秒\n\n错误统计:\n  PageOperationError: 1次\n\n开始时间: 2026-11-03T11:36:10.400602+00:00\n结束时间: 2026-11-03T11:36:48.447503+00:00\n============================================================\n2026-11-03 11:36:48,448 INFO 执行结束: 成功 0，失败 1\n"
 }
