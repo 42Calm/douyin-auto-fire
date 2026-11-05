@@ -38,8 +38,8 @@ class SearchBoxNotReadyError(RuntimeError):
 
 # 私信页是 SPA，domcontentloaded 之后搜索框由 JS 异步挂载，冷启动时可能超过
 # 单轮等待窗口。这里做有限次数重试，并在需要时 reload，避免把慢渲染误判为认证失效。
-SEARCH_BOX_RETRIES = 3
-_SEARCH_RETRY_DELAY_MS = 1_500
+SEARCH_BOX_RETRIES = 5
+_SEARCH_RETRY_DELAY_MS = 3_000
 
 
 # Collects only safe, whitelisted attributes. It deliberately reads no
@@ -146,8 +146,8 @@ async def open_private_messages(page: Page, timeout_ms: int = 15_000) -> None:
             raise AuthenticationError("进入抖音私信页面后登录状态失效")
         if attempt < SEARCH_BOX_RETRIES:
             LOGGER.warning("未检测到好友搜索框，第 %d/%d 次尝试，准备重试", attempt, SEARCH_BOX_RETRIES)
-            if attempt == 1:
-                # Reload once: a fresh load usually mounts the SPA search box.
+            if attempt % 2 == 1:
+                # Reload on every odd attempt: a fresh load usually mounts the SPA search box.
                 try:
                     await page.reload(wait_until="domcontentloaded", timeout=45_000)
                 except Exception:

@@ -71,14 +71,10 @@ def classify_error(exc: Exception) -> ErrorCategory:
 
     error_msg = str(exc).lower()
 
-    # 好友不存在 - 永久性错误
-    if any(keyword in error_msg for keyword in [
-        "找不到", "不存在", "搜索不到", "未找到",
-        "not found", "does not exist"
-    ]):
-        return ErrorCategory.PERMANENT
-
     # 页面元素定位问题 - 可能是DOM变化或渲染慢
+    # Must be checked before the keyword scan below: "搜索不到目标好友" also
+    # matches the permanent keyword list, but it usually means the search
+    # panel had not rendered yet, which is retryable.
     if isinstance(exc, PageOperationError) or any(keyword in error_msg for keyword in [
         "找不到页面元素", "无法确认", "element not found",
         "timeout", "locator", "selector"
@@ -88,6 +84,13 @@ def classify_error(exc: Exception) -> ErrorCategory:
             return ErrorCategory.TRANSIENT
         # 其他页面操作错误，可能是DOM变化，少量重试
         return ErrorCategory.TRANSIENT
+
+    # 好友不存在 - 永久性错误
+    if any(keyword in error_msg for keyword in [
+        "找不到", "不存在", "搜索不到", "未找到",
+        "not found", "does not exist"
+    ]):
+        return ErrorCategory.PERMANENT
 
     # 网络相关错误 - 临时性错误
     if any(keyword in error_msg for keyword in [

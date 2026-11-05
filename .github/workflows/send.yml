@@ -42,8 +42,9 @@ jobs:
         shell: bash
         run: |
           echo "巡检模式：不发送消息，仅验证登录态与好友是否可打开。"
-          python run.py --dry-run
-          echo "exit_code=$?" >> "$GITHUB_ENV"
+          code=0
+          python run.py --dry-run || code=$?
+          echo "exit_code=$code" >> "$GITHUB_ENV"
           exit 0
       - name: Publish run status
         if: always()

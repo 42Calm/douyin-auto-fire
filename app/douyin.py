@@ -5,7 +5,14 @@ import re
 
 from playwright.async_api import Locator, Page
 
-from app.selectors import CHAT_PANEL_MARKERS, MESSAGE_INPUTS, SEARCH_INPUTS
+from app.browser import AuthenticationError, RiskControlError
+from app.selectors import (
+    CHAT_PANEL_MARKERS,
+    LOGIN_REQUIRED_MARKERS,
+    MESSAGE_INPUTS,
+    RISK_MARKERS,
+    SEARCH_INPUTS,
+)
 
 
 class PageOperationError(RuntimeError):
@@ -13,6 +20,8 @@ class PageOperationError(RuntimeError):
 
 
 RETRY_DELAY_MS = 3_000
+SEARCH_RESULT_TIMEOUT_MS = 10_000
+_SEARCH_POLL_INTERVAL_MS = 400
 
 
 class DouyinChat:
@@ -45,13 +54,28 @@ class DouyinChat:
         await search.click()
         await search.fill("")
         await search.fill(name)
-        await self.page.wait_for_timeout(1_500)
 
-        result = await self._search_result(name)
+        result = await self._wait_for_search_result(name)
         if result is None:
             raise PageOperationError("搜索不到目标好友")
         await result.click(force=True)
         await self._confirm_opened(name)
+
+    async def _wait_for_search_result(self, name: str) -> Locator | None:
+        # The search panel renders its rows asynchronously. A fixed delay loses
+        # the race on a slow machine, so poll until the rows appear instead.
+        deadline = asyncio.get_running_loop().time() + SEARCH_RESULT_TIMEOUT_MS / 1000
+        while True:
+            result = await self._search_result(name)
+            if result is not None:
+                return result
+            if await _any_visible_now(self.page, RISK_MARKERS):
+                raise RiskControlError("搜索好友时页面要求进行安全验证，任务已停止")
+            if await _any_visible_now(self.page, LOGIN_REQUIRED_MARKERS):
+                raise AuthenticationError("搜索好友时登录状态失效")
+            if asyncio.get_running_loop().time() >= deadline:
+                return None
+            await self.page.wait_for_timeout(_SEARCH_POLL_INTERVAL_MS)
 
     async def _search_result(self, name: str) -> Locator | None:
         # Search mode renders a separate SearchPanel. Its "发消息" action is the
@@ -320,6 +344,16 @@ async def _group_name_matches(locator: Locator, expected: str) -> bool:
         )
     except Exception:
         return False
+
+
+async def _any_visible_now(page: Page, selectors: tuple[str, ...]) -> bool:
+    for selector in selectors:
+        try:
+            if await page.locator(selector).first.is_visible():
+                return True
+        except Exception:
+            continue
+    return False
 
 
 async def first_visible(page: Page, selectors: tuple[str, ...], timeout_ms: int = 15_000) -> Locator:
